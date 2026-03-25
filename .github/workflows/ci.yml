@@ -18,24 +18,44 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - name: Install SBCL
-        run: sudo apt-get install sbcl
+      - name: Install SBCL (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y sbcl
+
+      - name: Install SBCL (macOS)
+        if: runner.os == 'macOS'
+        run: brew install sbcl
+
+      - name: Install SBCL (Windows)
+        if: runner.os == 'Windows'
+        run: choco install sbcl
 
       - name: Install Quicklisp and ql-https
-        run: bash install.sh
+        run: ./install.sh
 
       - name: Run tests
+        env:
+          CI: 1
         run: |
           sbcl <<EOF
           (require 'asdf)
+          (push (uiop:getcwd) asdf:*central-registry*)
           (ql:quickload "ql-https/test")
           (asdf:test-system "ql-https")
+          (uiop:quit)
           EOF
-          
+

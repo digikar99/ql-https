@@ -25,14 +25,14 @@
 (defsystem "ql-https/test"
   :description "Tests for ql-https"
   :depends-on ((:require "uiop")
-               "fiasco"
+               "fiveam"
                "ql-https")
   :pathname "t/"
   :components ((:file "tests"))
   :perform (test-op (op c)
-                    (unless (uiop:symbol-call :fiasco :run-package-tests :package :ql-https/test)
-                      #+(not (or :swank :slynk))
-                      (error "Tests failed."))))
+                    (unless (uiop:symbol-call :fiveam :run! :ql-https)
+                      (when (uiop:getenvp "CI")
+                        (uiop:quit 1)))))
 
 
 
